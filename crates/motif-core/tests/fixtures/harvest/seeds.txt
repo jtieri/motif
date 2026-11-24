@@ -1,0 +1,32 @@
+# Seed colors for the harvest golden test, one #rrggbb per line. Comments
+# start with "# ".
+# Catppuccin Mocha's mauve, blue, teal and red, whose tones its palette pins.
+#cba6f7
+#89b4fa
+#94e2d5
+#f38ba8
+# Tokyo Night Day's blue, a saturated color for a light palette.
+#2e7de9
+# Primaries, secondaries and the extremes of the gamut.
+#ff0000
+#00ff00
+#0000ff
+#ffff00
+#00ffff
+#ff00ff
+#000000
+#ffffff
+#808080
+# Low-chroma and dark seeds, as monochrome themes use for an accent.
+#1e1e2e
+#7b5b55
+#c2c2b0
+#4d86b0
+#0b1216
+# Light-theme accents and mid tones.
+#d20f39
+#40a02b
+#df8e1d
+#8839ef
+#e67e80
+#a7c080

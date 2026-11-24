@@ -67,6 +67,12 @@ impl FromStr for Color {
     }
 }
 
+impl serde::Serialize for Color {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        serializer.collect_str(self)
+    }
+}
+
 /// The error returned when a string is not a `#rrggbb` color.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 #[error("expected a color in the form #rrggbb")]
