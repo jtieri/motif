@@ -1,0 +1,30 @@
+[package]
+name = "motif-fuzz"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+motif-core = { path = "../crates/motif-core" }
+
+# Kept out of the main workspace so that it builds only with cargo-fuzz.
+[workspace]
+members = ["."]
+
+[[bin]]
+name = "omarchy_colors"
+path = "fuzz_targets/omarchy_colors.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "omarchy_value"
+path = "fuzz_targets/omarchy_value.rs"
+test = false
+doc = false
+bench = false

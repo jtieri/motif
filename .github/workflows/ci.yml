@@ -31,6 +31,14 @@ jobs:
       - uses: dtolnay/rust-toolchain@1.88
       - run: cargo check --workspace --locked
 
+  fuzz:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@nightly
+      - run: cargo check --locked
+        working-directory: fuzz
+
   deny:
     runs-on: ubuntu-latest
     steps:
