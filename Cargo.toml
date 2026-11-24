@@ -12,7 +12,6 @@ authors = ["Justin Tieri"]
 
 [workspace.dependencies]
 motif-core = { path = "crates/motif-core" }
-motif-render = { path = "crates/motif-render" }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"

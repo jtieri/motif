@@ -11,7 +11,6 @@ publish = false
 
 [dependencies]
 motif-core.workspace = true
-motif-render.workspace = true
 
 [lints]
 workspace = true

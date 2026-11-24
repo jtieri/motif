@@ -91,7 +91,6 @@ name = "motif"
 version = "0.1.0"
 dependencies = [
  "motif-core",
- "motif-render",
 ]
 
 [[package]]
@@ -107,9 +106,6 @@ dependencies = [
 [[package]]
 name = "motif-render"
 version = "0.1.0"
-dependencies = [
- "motif-core",
-]
 
 [[package]]
 name = "num-traits"

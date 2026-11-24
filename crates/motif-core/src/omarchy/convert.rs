@@ -262,7 +262,7 @@ color15 = \"#ffffff\"
         assert_eq!(theme.cursor, Some(Color::WHITE));
         let names: Vec<_> = theme.hues.iter().map(|h| h.name.as_str()).collect();
         assert_eq!(names, ["red", "yellow", "green", "cyan", "blue", "magenta"]);
-        assert!(theme.extras.is_empty());
+        assert_eq!(theme.extras, []);
     }
 
     #[test]

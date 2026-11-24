@@ -48,7 +48,7 @@ fn built_in_themes_resolve_like_omarchy() {
 #[test]
 fn edge_cases_resolve_like_omarchy() {
     let cases = fixtures("cases");
-    assert!(!cases.is_empty());
+    assert_ne!(cases.len(), 0, "no edge-case fixtures");
     for dir in &cases {
         check(dir);
     }
@@ -62,7 +62,7 @@ fn built_in_themes_load_cleanly() {
         assert!(loaded.warnings.is_empty(), "{}", dir.display());
 
         let theme = loaded.theme;
-        assert!(!theme.name.is_empty());
+        assert_ne!(theme.name, "");
         assert_eq!(theme.provenance.kind, SourceKind::OmarchyColors);
         assert_eq!(
             theme.mode.as_str(),
