@@ -1,0 +1,17 @@
+[package]
+name = "motif"
+description = "Import, browse and preview desktop color themes"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+authors.workspace = true
+publish = false
+
+[dependencies]
+motif-core.workspace = true
+motif-render.workspace = true
+
+[lints]
+workspace = true
