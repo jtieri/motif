@@ -1,0 +1,52 @@
+accent	#ABCDEF
+background	zz
+bg	zz
+blue	#ABCDEF
+bright_blue	#bcd7f2
+bright_cyan	#25c827
+bright_foreground	
+bright_green	#415d73
+bright_magenta	#263333
+bright_purple	#263333
+bright_red	#403333
+bright_yellow	#2525e5
+brown	#fffffffffffffff8fffffffffffffff870
+color0	zz
+color1	#1
+color10	#415d73
+color11	#2525e5
+color12	#bcd7f2
+color13	#263333
+color14	#25c827
+color15	
+color2	#12345
+color3	nothex
+color4	#ABCDEF
+color5	-
+color6	rgba(1e1e2eff)
+color7	
+color8	
+color9	#403333
+cursor	
+cyan	rgba(1e1e2eff)
+dark_background	#fffffffffffffff40000
+dark_bg	#fffffffffffffff40000
+dark_foreground	
+darker_background	#fffffffffffffff80000
+darker_bg	#fffffffffffffff80000
+foreground	
+green	#12345
+light_foreground	
+lighter_background	zz
+lighter_bg	zz
+magenta	-
+mode	dark
+muted	
+orange	nothex
+purple	-
+red	#1
+selection	zz
+selection_background	zz
+selection_foreground	
+theme_type	dark
+yellow	nothex

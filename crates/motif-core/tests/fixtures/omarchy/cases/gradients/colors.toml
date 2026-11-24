@@ -1,0 +1,8 @@
+background = "#000000"
+hyprland_active_border = "rgba(7fc9c4ee) rgba(68a5a2ee) 45deg"
+hyprland_inactive_border = "rgba(68,71,90,0.8)"
+icon_mark = "#8839ef"
+named = "cyan blue 45deg"
+size = 6
+fade = 0.5
+accent = "rgb(7aa2f7)"

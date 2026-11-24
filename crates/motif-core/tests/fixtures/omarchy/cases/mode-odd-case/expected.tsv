@@ -1,0 +1,52 @@
+accent	
+background	#ffffff
+bg	#ffffff
+blue	
+bright_blue	#333333
+bright_cyan	#333333
+bright_foreground	
+bright_green	#333333
+bright_magenta	#333333
+bright_purple	#333333
+bright_red	#333333
+bright_yellow	#333333
+brown	#000000
+color0	#ffffff
+color1	
+color10	#333333
+color11	#333333
+color12	#333333
+color13	#333333
+color14	#333333
+color15	
+color2	
+color3	
+color4	
+color5	
+color6	
+color7	
+color8	
+color9	#333333
+cursor	
+cyan	
+dark_background	#bfbfbf
+dark_bg	#bfbfbf
+dark_foreground	
+darker_background	#808080
+darker_bg	#808080
+foreground	
+green	
+light_foreground	
+lighter_background	#ffffff
+lighter_bg	#ffffff
+magenta	
+mode	Light
+muted	
+orange	
+purple	
+red	
+selection	#ffffff
+selection_background	#ffffff
+selection_foreground	
+theme_type	Light
+yellow	
