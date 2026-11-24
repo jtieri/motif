@@ -20,6 +20,17 @@ motif is early in development.
 | `motif-render` | Preview images drawn as a mockup of the desktop |
 | `motif` | The command-line program |
 
+## Usage
+
+```sh
+motif import ~/src/omarchy-nord-theme
+```
+
+reads the theme in that folder and saves it as a palette in
+`~/.config/matugen/palettes`. `motif import --help` lists the options, and
+[docs/mapping.md](docs/mapping.md) explains where each color of the palette
+comes from.
+
 ## Building
 
 ```sh
