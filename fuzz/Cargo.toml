@@ -28,3 +28,10 @@ path = "fuzz_targets/omarchy_value.rs"
 test = false
 doc = false
 bench = false
+
+[[bin]]
+name = "omarchy_alacritty"
+path = "fuzz_targets/omarchy_alacritty.rs"
+test = false
+doc = false
+bench = false

@@ -1,8 +1,8 @@
-//! The Omarchy `colors.toml` source.
+//! The Omarchy sources: `colors.toml` and the legacy `alacritty.toml`.
 
 use std::path::Path;
 
-use super::{SkipReason, read_colors};
+use super::{Resolved, SkipReason, read_alacritty, read_colors};
 use crate::file::{self, ReadError};
 use crate::source::{LoadError, Loaded, Source, Warning, folder_name};
 use crate::theme::{Provenance, SourceKind};
@@ -23,31 +23,72 @@ impl Source for OmarchyColors {
     fn load(&self, dir: &Path) -> Result<Loaded, LoadError> {
         let path = dir.join("colors.toml");
         let resolved = read_colors(&path)?;
-        let name = display_name(&folder_name(dir)?);
-        let theme = resolved
-            .to_theme(name, Provenance::local(SourceKind::OmarchyColors, dir))
-            .map_err(|source| LoadError::Omarchy {
-                path: path.clone(),
-                source,
-            })?;
-        let warnings = resolved
-            .skipped()
-            .iter()
-            .map(|skipped| Warning {
-                path: path.clone(),
-                line: Some(skipped.line),
-                message: match &skipped.reason {
-                    SkipReason::Key => {
-                        "key has unsupported characters; Omarchy ignores the line".to_owned()
-                    }
-                    SkipReason::Value { key } => {
-                        format!("{key} has unsupported characters; Omarchy ignores it")
-                    }
-                },
-            })
-            .collect();
-        Ok(Loaded { theme, warnings })
+        load(dir, &path, &resolved, self.kind())
     }
+}
+
+/// Reads an Omarchy theme folder through its legacy `alacritty.toml`, by way
+/// of the `colors.toml` Omarchy generates from it.
+///
+/// Omarchy uses a `colors.toml` when a theme has both, so this comes after
+/// [`OmarchyColors`] in [`SOURCES`](crate::source::SOURCES).
+#[derive(Debug, Clone, Copy, Default)]
+pub struct OmarchyAlacritty;
+
+impl Source for OmarchyAlacritty {
+    fn kind(&self) -> SourceKind {
+        SourceKind::OmarchyAlacritty
+    }
+
+    fn detect(&self, dir: &Path) -> Result<bool, ReadError> {
+        file::is_regular_file(&dir.join("alacritty.toml"))
+    }
+
+    fn load(&self, dir: &Path) -> Result<Loaded, LoadError> {
+        let path = dir.join("alacritty.toml");
+        let resolved = read_alacritty(&path)?;
+        load(dir, &path, &resolved, self.kind())
+    }
+}
+
+/// Builds the theme of the folder `dir` from the palette read from `path`.
+fn load(
+    dir: &Path,
+    path: &Path,
+    resolved: &Resolved,
+    kind: SourceKind,
+) -> Result<Loaded, LoadError> {
+    let name = display_name(&folder_name(dir)?);
+    let theme = resolved
+        .to_theme(name, Provenance::local(kind, dir))
+        .map_err(|source| LoadError::Omarchy {
+            path: path.to_owned(),
+            source,
+        })?;
+    // Lines of a generated `colors.toml` mean nothing to the reader, so
+    // warnings about one carry no line number.
+    let generated = kind == SourceKind::OmarchyAlacritty;
+    let warnings = resolved
+        .skipped()
+        .iter()
+        .map(|skipped| Warning {
+            path: path.to_owned(),
+            line: (!generated).then_some(skipped.line),
+            message: match (&skipped.reason, generated) {
+                (SkipReason::Key, _) => {
+                    "key has unsupported characters; Omarchy ignores the line".to_owned()
+                }
+                (SkipReason::Value { key }, false) => {
+                    format!("{key} has unsupported characters; Omarchy ignores it")
+                }
+                (SkipReason::Value { key }, true) => format!(
+                    "{key} in the generated colors.toml has unsupported characters; \
+                     Omarchy ignores it"
+                ),
+            },
+        })
+        .collect();
+    Ok(Loaded { theme, warnings })
 }
 
 /// Returns the name Omarchy shows for a theme folder or repository name.
@@ -205,6 +246,126 @@ mod tests {
         let cwd = std::env::current_dir().unwrap();
         let expected = cwd.file_name().unwrap().to_string_lossy().into_owned();
         assert_eq!(folder_name(Path::new(".")).unwrap(), expected);
+    }
+
+    const ALACRITTY: &str = "[colors.primary]\nbackground = '#eeeeee'\n\
+        foreground = '#111111'\n[colors.normal]\nblack = '#000000'\n\
+        red = '#aa0000'\ngreen = '#00aa00'\nyellow = '#aaaa00'\n\
+        blue = '#0000aa'\nmagenta = '#aa00aa'\ncyan = '#00aaaa'\n\
+        white = '#aaaaaa'\n";
+
+    #[test]
+    fn detects_and_loads_an_alacritty_folder() {
+        let (_tmp, dir) = scratch("omarchy-old-paper-theme");
+        assert!(!OmarchyAlacritty.detect(&dir).unwrap());
+        fs::write(dir.join("alacritty.toml"), ALACRITTY).unwrap();
+        assert!(OmarchyAlacritty.detect(&dir).unwrap());
+        assert!(!OmarchyColors.detect(&dir).unwrap());
+
+        let loaded = crate::source::load(&dir).unwrap();
+        assert_eq!(loaded.theme.name, "Old Paper");
+        assert_eq!(loaded.theme.mode, Mode::Light);
+        assert_eq!(loaded.theme.provenance.kind, SourceKind::OmarchyAlacritty);
+        assert_eq!(loaded.warnings, []);
+    }
+
+    #[test]
+    fn prefers_colors_toml_to_alacritty_toml() {
+        let (_tmp, dir) = scratch("both");
+        fs::write(dir.join("alacritty.toml"), ALACRITTY).unwrap();
+        fs::write(
+            dir.join("colors.toml"),
+            MINIMAL.replace("#eeeeee", "#222222"),
+        )
+        .unwrap();
+        let loaded = crate::source::load(&dir).unwrap();
+        assert_eq!(loaded.theme.provenance.kind, SourceKind::OmarchyColors);
+        assert_eq!(loaded.theme.mode, Mode::Dark);
+    }
+
+    #[test]
+    fn honors_a_light_mode_file_beside_alacritty_toml() {
+        let (_tmp, dir) = scratch("marker");
+        fs::write(
+            dir.join("alacritty.toml"),
+            ALACRITTY.replace("#eeeeee", "#222222"),
+        )
+        .unwrap();
+        assert_eq!(OmarchyAlacritty.load(&dir).unwrap().theme.mode, Mode::Dark);
+        fs::write(dir.join("light.mode"), "").unwrap();
+        assert_eq!(OmarchyAlacritty.load(&dir).unwrap().theme.mode, Mode::Light);
+    }
+
+    #[test]
+    fn reports_missing_alacritty_colors() {
+        let (_tmp, dir) = scratch("partial");
+        fs::write(
+            dir.join("alacritty.toml"),
+            ALACRITTY.replace("cyan", "#cyan"),
+        )
+        .unwrap();
+        let err = OmarchyAlacritty.load(&dir).unwrap_err();
+        assert!(matches!(err, LoadError::OmarchyAlacritty { .. }));
+        assert!(
+            err.to_string()
+                .starts_with("cannot extract all normal colors from ")
+        );
+        let cause = std::error::Error::source(&err).unwrap().to_string();
+        assert_eq!(cause, "missing colors.normal.cyan");
+    }
+
+    #[test]
+    fn warns_about_a_generated_value_omarchy_ignores() {
+        let (_tmp, dir) = scratch("tabs");
+        let text = format!("{ALACRITTY}[colors.bright]\nred\tx = '#ff0000'\n");
+        fs::write(dir.join("alacritty.toml"), text).unwrap();
+        let loaded = OmarchyAlacritty.load(&dir).unwrap();
+        assert_eq!(loaded.warnings.len(), 1);
+        assert_eq!(loaded.warnings[0].line, None);
+        assert!(
+            loaded.warnings[0]
+                .message
+                .starts_with("color9 in the generated")
+        );
+    }
+
+    #[test]
+    fn refuses_unsafe_alacritty_files() {
+        let (_tmp, dir) = scratch("unsafe");
+        fs::write(dir.join("real.toml"), ALACRITTY).unwrap();
+        std::os::unix::fs::symlink("real.toml", dir.join("alacritty.toml")).unwrap();
+        assert!(matches!(
+            OmarchyAlacritty.detect(&dir),
+            Err(ReadError::Symlink { .. })
+        ));
+        assert!(matches!(
+            crate::source::load(&dir),
+            Err(LoadError::Read(ReadError::Symlink { .. }))
+        ));
+
+        fs::remove_file(dir.join("alacritty.toml")).unwrap();
+        let mut large = ALACRITTY.to_owned();
+        while large.len() as u64 <= super::super::MAX_ALACRITTY_SIZE {
+            large.push_str("# padding\n");
+        }
+        fs::write(dir.join("alacritty.toml"), large).unwrap();
+        assert!(matches!(
+            OmarchyAlacritty.load(&dir),
+            Err(LoadError::Read(ReadError::TooLarge { .. }))
+        ));
+    }
+
+    #[test]
+    fn reports_a_folder_with_neither_color_file() {
+        let (_tmp, dir) = scratch("omarchy-gruvu-theme");
+        fs::write(dir.join("hyprland.conf"), "general {}\n").unwrap();
+        fs::create_dir(dir.join("backgrounds")).unwrap();
+        let err = crate::source::load(&dir).unwrap_err();
+        assert!(matches!(err, LoadError::Unrecognized { .. }));
+        assert!(
+            err.to_string()
+                .ends_with("has no theme file motif can read")
+        );
     }
 
     #[test]

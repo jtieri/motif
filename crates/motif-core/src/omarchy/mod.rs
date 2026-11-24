@@ -5,8 +5,14 @@
 //! theme leaves out through a cascade of aliases and fallbacks. This module
 //! ports that script exactly: [`ColorsToml::resolve`] returns the same keys
 //! and values `omarchy-theme-color --all` prints, and [`Resolved::to_theme`]
-//! turns them into a [`Theme`].
+//! turns them into a [`Theme`](crate::Theme).
+//!
+//! Older themes have only an `alacritty.toml`, from which Omarchy generates
+//! the `colors.toml` with `omarchy-theme-colors-from-alacritty`.
+//! [`colors_from_alacritty`] ports that script, and [`read_alacritty`] reads
+//! such a theme through the same resolver.
 
+mod alacritty;
 mod convert;
 mod parse;
 mod resolve;
@@ -16,15 +22,20 @@ mod value;
 use std::collections::BTreeMap;
 use std::path::Path;
 
+pub use alacritty::{MissingColors, colors_from_alacritty};
 pub use convert::{ThemeError, ThemeErrorKind};
 pub use parse::{Entry, SkipReason, Skipped};
-pub use source::{OmarchyColors, display_name};
+pub use source::{OmarchyAlacritty, OmarchyColors, display_name};
 pub use value::{ParseValueError, parse_color};
 
 use crate::file::{self, ReadError};
+use crate::source::LoadError;
 
 /// The largest `colors.toml` motif reads, in bytes.
 pub const MAX_COLORS_SIZE: u64 = 64 * 1024;
+
+/// The largest `alacritty.toml` motif reads, in bytes.
+pub const MAX_ALACRITTY_SIZE: u64 = 64 * 1024;
 
 /// The pairs Omarchy reads from a `colors.toml`.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -120,9 +131,30 @@ impl Resolved {
 /// [`MAX_COLORS_SIZE`] or cannot be read.
 pub fn read_colors(path: &Path) -> Result<Resolved, ReadError> {
     let bytes = file::read_capped(path, MAX_COLORS_SIZE)?;
-    let light_mode = match path.parent() {
-        Some(dir) => file::is_regular_file(&dir.join("light.mode"))?,
-        None => false,
-    };
-    Ok(ColorsToml::parse(&bytes).resolve(light_mode))
+    Ok(ColorsToml::parse(&bytes).resolve(light_mode_beside(path)?))
+}
+
+/// Reads an `alacritty.toml`, generates the `colors.toml` Omarchy would and
+/// resolves it, checking for a `light.mode` file beside it as Omarchy does.
+///
+/// # Errors
+///
+/// Returns [`LoadError::Read`] for the same reasons as [`read_colors`], with
+/// [`MAX_ALACRITTY_SIZE`] as the limit, and
+/// [`LoadError::OmarchyAlacritty`] if the file lacks a normal color.
+pub fn read_alacritty(path: &Path) -> Result<Resolved, LoadError> {
+    let bytes = file::read_capped(path, MAX_ALACRITTY_SIZE)?;
+    let colors = colors_from_alacritty(&bytes).map_err(|source| LoadError::OmarchyAlacritty {
+        path: path.to_owned(),
+        source,
+    })?;
+    Ok(ColorsToml::parse(&colors).resolve(light_mode_beside(path)?))
+}
+
+/// Reports whether a `light.mode` file sits beside `path`.
+fn light_mode_beside(path: &Path) -> Result<bool, ReadError> {
+    match path.parent() {
+        Some(dir) => file::is_regular_file(&dir.join("light.mode")),
+        None => Ok(false),
+    }
 }

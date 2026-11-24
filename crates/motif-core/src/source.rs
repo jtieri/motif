@@ -5,7 +5,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use crate::file::ReadError;
-use crate::omarchy::{OmarchyColors, ThemeError};
+use crate::omarchy::{MissingColors, OmarchyAlacritty, OmarchyColors, ThemeError};
 use crate::theme::{SourceKind, Theme};
 
 /// A theme format: recognizes a theme folder in that format and reads it.
@@ -36,7 +36,7 @@ pub trait Source: fmt::Debug + Send + Sync {
 ///
 /// A folder in more than one format is read with the first that matches, so
 /// a format that Omarchy prefers comes before the ones it falls back to.
-pub static SOURCES: &[&dyn Source] = &[&OmarchyColors];
+pub static SOURCES: &[&dyn Source] = &[&OmarchyColors, &OmarchyAlacritty];
 
 /// Returns the first source that recognizes `dir`.
 ///
@@ -113,11 +113,21 @@ pub enum LoadError {
     /// An Omarchy palette is missing a color or has one motif cannot read.
     #[error("{} does not describe a complete theme", path.display())]
     Omarchy {
-        /// The `colors.toml`.
+        /// The `colors.toml`, or the `alacritty.toml` it was generated from.
         path: PathBuf,
         /// What is wrong with the palette.
         #[source]
         source: ThemeError,
+    },
+    /// An Omarchy `alacritty.toml` lacks a color Omarchy needs to generate a
+    /// `colors.toml` from it.
+    #[error("cannot extract all normal colors from {}", path.display())]
+    OmarchyAlacritty {
+        /// The `alacritty.toml`.
+        path: PathBuf,
+        /// The colors it lacks.
+        #[source]
+        source: MissingColors,
     },
     /// The folder has no name to name the theme by, as with `/`.
     #[error("{} has no folder name to name the theme by", path.display())]

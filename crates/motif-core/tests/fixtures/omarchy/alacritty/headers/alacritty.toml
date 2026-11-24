@@ -1,0 +1,24 @@
+black = '#ffffff'
+colors.normal.red = '#ffffff'
+  	[colors.normal]  	
+black = '#1d2021'
+red = '#cc241d'
+green = '#98971a'
+yellow = '#d79921'
+blue = '#458588'
+magenta = '#b16286'
+cyan = '#689d6a'
+white = '#a89984'
+[colors.bright] # a comment resets the section
+red = '#ffffff'
+[ colors.bright ]
+green = '#ffffff'
+[[colors.bright]]
+yellow = '#ffffff'
+[colors.bright]
+blue
+# blue = '#ffffff'
+  #magenta = '#ffffff'
+cyan = '#123456'
+[]
+white = '#ffffff'
