@@ -9,6 +9,12 @@ authors.workspace = true
 publish = false
 
 [dependencies]
+libc = "0.2"
+thiserror = "2.0.17"
+
+[dev-dependencies]
+proptest = { version = "1.12", default-features = false, features = ["std"] }
+tempfile = "3"
 
 [lints]
 workspace = true
